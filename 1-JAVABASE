@@ -169,13 +169,47 @@ Java 采用方式是复制 finally 代码块的内容，
 
 
 36、list、set、queue、map区别
+    List:数据有序可重复
+    Set:数据无序不可重复
+    Queue:按规则确定顺序，有序可重复
+    Map:kv键值对，k不可重复，无序
+
+
 37、ArrayList和LinkedList 的区别
-38、comparable 和 Comparator 的区别
+   数据结构：ArrayList底层是个动态数组，LinkedList底层是个链表。
+   线程安全：都是线程不安全的。
+   效率：ArrayList支持随机访问，随机访问效率高，增删效率低。LinkedList不支持随机访问，增删效率高。
+   内存空间占比：ArrayList空间浪费在需要在列表尾部预留一定的空间。LinkedList的空间浪费在于每个元素需要多存储前驱后继的信息。
 39、HashMap与HashTable区别
+   数据结构：底层都是哈希表
+   线程安全：hashMap线程不安全，hashTable的方法加了synchronized所以是线程安全的。
+   效率：HashMap效率比HashTable高
+   null:hashmap的键值可以为null，hashtable不允许
+   初始化容量：hashmap初始化容量16，每次扩容为原来的2倍。hashtable初始化容量为11，每次扩容为原来的2n+1.
+            如果初始化时指定了大小，hashtable会直接使用这个大小，hashmap会扩充为2的幂次方大小。
 40、HashSet如何检查重复？
+    会拿要加入的对象的hashcode与存在set中的hashcode比较，如果不存在相同的，那么认为不存在重复。如果有相同的，在比较equals.
 41、HashMap实现原理？
+    jdk1.8以下是 数组+链表的形式 链表散列。put数据时，现根据key的hashcode计算出当前元素存放的位置，如果不存在就将元素放在这个位置。如果存在就判断这个位置下的链表里的每一个key，
+    如果有相同的key，直接覆盖，没有的话，用拉链法解决冲突，
+    jdk1.8是数组+链表 以及红黑树的形式，在数组长度>=64时，如果有其中一个链表到达阈值8，就会将链表转换成红黑树，以减少搜素时间。
 42、HashMap 的长度为什么是 2 的幂次方
+    因为拿到对象的hash扰动后的值后还需要根据这个值计算在数组中的位置，最常用的算法就是hash值对hashmap数组长度取余，第一想到的肯定是%,
+    在计算机中，位运算的效率是最高的，因为计算机是二进制的，如果除数是2的幂次方，那就可以转成位运算。(n-1)&hash。
 43、HashMap 多线程操作导致死循环问题
-44、ConcurrentHashMap 和 Hashtable 的区别
-45、ConcurrentHashMap 线程安全的具体实现方式/底层具体实现
+    hashmap1.7在并发下的 Rehash 会造成元素之间会形成一个循环链表
+    hashmap1.8在多线程下会出现数据丢失的问题。  
+44、ConcurrentHashMap 线程安全的具体实现方式/底层具体实现
+   JDK1.7 Segment + Entry 。 将数据分为一段段存储，segment继承了ReentrantLock,扮演了一个分段锁的角色，给每一段数据分配
+   了一把锁，当一个线程占用访问其中一段锁时，其他段也可以被别的线程访问。。
+   JDK1.8 是 Node+TreeNode的形式，每一个Node通过synchronized和cas来实现线程安全，这样锁的粒度比1.7更小，并发度就更高，效率更高。
+   java8 在链表长度超过8时转化成红黑树，synchronized只锁定node和treeNode的首节点，只要hash不冲突就不会产生并发冲突，效率大大提高。
 46、ArrayList和HashMap扩容
+   jdk1.8初始化0，新增第一个元素后，容量变成10，每次扩容为原来的1.5倍。
+   hashmap 初始化16，默认负载因子0.75，即数量达到12时就需要扩容为原来的2倍。
+47、modCount的作用？
+   集合类常见的变量modCount，用于记录对象的修改次数，比如增删改查。
+   一个线程通过迭代器遍历集合的过程中，如果有其他线程修改了集合，那么就会抛出并发修改异常，因此遍历的时候回记录modCount和expectCount。
+   不一致就会报错。
+   有一点版本控制的意思，可以理解成version，在特定的操作下需要对version进行检查，适用于Fail-Fast机制。
+
