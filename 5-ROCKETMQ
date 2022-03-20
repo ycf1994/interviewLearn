@@ -1,0 +1,87 @@
+1、ROCKETMQ架构设计原理
+    nameServer:注册中心、用于broke管理和topic路由信息注册。
+    BROKER:消息服务器，在启动时会向所有nameServer注册。
+    producer:在发送消息前会先从nameServer获取broke服务器列表，根据负载均衡获取
+    一台进行消息发送。
+    consumer:与nameserver的一台保持长连接，定期或者topic路由信息,向提供topic的master和slave建立
+    长连接，可以从master拉取消费也可以是slave.
+
+2、MQ选型，为什么选择ROCKETMQ
+    数据可靠性：
+        1、RocketMQ有异步刷盘和同步刷盘，同步刷盘不会因为crash导致消息丢失
+        2、Kafka只有异步刷盘，异步复制,crash会丢失还未持久化的数据
+
+    性能：
+        1、Kafka单机几百万TPS主要是producer将多个消息合并，批量发送，当produced宕机会丢数据
+        RocketMQ 单机几W
+        为什么RocketMq不这么做
+        1、RocketMQ纯java，合并缓存大量消息可能GC频繁影响性能
+        2、缓存消息如果producer宕机会丢失数据
+        
+    队列：kafka单机超过64个队列，会出现明显的load变高、发送消息响应时间变长的情况。【producer会为每个分区缓存消息，当满了就发送，
+    分区数多，缓存的量就大】
+        rocketmq单机支持最高5W个队列，性能没什么变化。
+        队列多的好处：
+        1、可以创建更多的topic。每个topic由一批队列组成
+    
+    重试：
+    kafka消费失败不支持重试，rocketmq支持重试
+
+    消费顺序：
+    1、kafka支持顺序消费，一个broken宕机会造成消息乱序
+    2、rocketmq支持顺序消费，一个broken宕机会丢数据
+
+    定时消息：
+    1、kafka不支持定时消息
+    2、rocketmq支持定时消息
+
+    消息过滤：
+    1、kafka不支持broke端消息过滤
+    2、rocketmq支持broke消息过滤
+
+    消费并行度：
+    1、kafka并行度和分区数一致，有多少个分区就有多少个线程消费
+    2、rocketmq的并行度有消费端开的线程数决定
+
+3、NameServer问题记录？
+    NameServer路由元信息保存了什么数据？
+        1、topic消息队列路由信息
+        2、broker信息
+        3、broker集群信息
+        4、broker状态信息
+        5、FilterServer列表
+    路由注册和剔除原理？
+    路由注册：broker启动时像集群内所有的namesever,每隔30s向集群内的nameserver发送心跳包，
+    nameServer收到心跳包更新该broke最近更新时间
+    路由剔除：
+    1、broker正常关闭，执行路由剔除
+    2、nameserver每隔10s删除已经2分钟没有心跳的broker信息。
+
+    路由发现原理？
+    rocketmq的路由是非实时的。当topic路由发生变化，不会主动推送给客户端。客户端根据topic名称
+    主动向nameserver拉取。
+    用nameServer优缺点，为什么不用ZK
+    1、性能：nameserver可以容易的无限扩展，服务之间没有关联，不存在zk的强一致性，需要选举，会影响到性能，和高可用
+    2、存储：nameserver存储路由信息依赖心跳上报，不需要持久化。用不到也没必要zk的持久化
+4、消息发送原理？
+    
+5、消息发送存储流程？
+6、存储文件和内存映射
+7、索引文件恢复原理？
+8、文件刷盘机制？
+9、过期文件删除机制？
+10、消息消费流程
+11、定时消费机制
+12、消息过滤原理
+13、顺序消费原理
+14、RocketMq主从复制原理
+15、RocketMq读写分离原理
+16、RocketMq事务
+17、RocketMQ应用场景
+18、如何保证消息不丢失
+19、如果保证消息幂等
+20、广播消费和集群消费。
+21、RocketMQ如何做负载均衡？
+22、消息堆积怎么处理
+23、高吞吐量下如何优化生产者和消费者的性能?
+
