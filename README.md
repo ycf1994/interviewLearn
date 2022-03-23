@@ -6,9 +6,9 @@
 
 3.7 RocketMq
 
-3.8 - 3.9  Mysql
+3.8  Mysql
 
-3.10 - 3.11  spring boot
+3.10  spring boot
 
 3.12 Dubbo 
 
